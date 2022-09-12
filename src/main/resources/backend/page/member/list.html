@@ -125,6 +125,7 @@
           }
         },
         computed: {},
+        /* 钩子函数，当vue对象创建完成后自动执行 */
         created() {
           this.init()
           this.user = JSON.parse(localStorage.getItem('userInfo')).username

@@ -1,16 +1,15 @@
 package com.xiaoxiaoyi.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.entity.Employee;
 import com.xiaoxiaoyi.reggie.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -100,5 +99,33 @@ public class EmployeeController {
         log.info("新增员工：{}", employee.toString());
         employeeService.save(employee);
         return R.success("新增员工成功！");
+    }
+
+    /**
+     * 员工列表分页查询
+     *
+     * @param page
+     * @param pageSize
+     * @param name
+     * @return
+     */
+    @GetMapping("/page")
+    public R<Page> page(@RequestParam("page") int page, @RequestParam("pageSize") int pageSize, @RequestParam(value = "name", required = false) String name) {
+        log.info("page = {}, pageSize = {}, name = {}", page, pageSize, name);
+
+        // 1. 构造分页对象
+        Page<Employee> pageInfo = new Page<>(page, pageSize);
+
+        // 2. 构造条件对象
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
+        // 当name不为null时添加like条件
+        queryWrapper.like(StringUtils.isNotEmpty(name), Employee::getName, name);
+        // 添加排序条件，按照updateTime降序排列
+        queryWrapper.orderByDesc(Employee::getUpdateTime);
+
+        // 3. 执行查询
+        employeeService.page(pageInfo, queryWrapper);
+
+        return R.success(pageInfo);
     }
 }
