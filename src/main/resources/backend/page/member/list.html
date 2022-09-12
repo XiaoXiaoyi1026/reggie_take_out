@@ -127,7 +127,9 @@
         computed: {},
         /* 钩子函数，当vue对象创建完成后自动执行 */
         created() {
+          /* 初始化页面函数 */
           this.init()
+          /* 获取当前登录用户的JSON数据 */
           this.user = JSON.parse(localStorage.getItem('userInfo')).username
         },
         mounted() {
@@ -168,7 +170,7 @@
               },true)
             }
           },
-          //状态修改
+          // 状态修改
           statusHandle (row) {
             this.id = row.id
             this.status = row.status
