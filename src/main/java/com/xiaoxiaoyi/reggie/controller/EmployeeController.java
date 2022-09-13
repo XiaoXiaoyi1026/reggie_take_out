@@ -143,6 +143,9 @@ public class EmployeeController {
         // employee.setUpdateUser((Long) request.getSession().getAttribute("employee"));
         // employee.setUpdateTime(LocalDateTime.now());
 
+        long id = Thread.currentThread().getId();
+        log.info("当前执行到EmployeeController.update方法的线程id为：{}", id);
+
         // 2. 根据id更新状态
         employeeService.updateById(employee);
 
