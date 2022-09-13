@@ -34,7 +34,7 @@ public class GlobalExceptionHandle {
         // 判断异常信息
         if (message.contains("Duplicate entry")) {
             String[] strings = message.split(" ");
-            return R.error("账户" + strings[2] + "已存在！");
+            return R.error(strings[2] + "已存在！");
         }
 
         // 返回未知错误
