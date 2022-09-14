@@ -1,6 +1,5 @@
 package com.xiaoxiaoyi.reggie.controller;
 
-import com.alibaba.druid.sql.ast.expr.SQLCaseExpr;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiaoxiaoyi.reggie.common.R;
@@ -9,9 +8,6 @@ import com.xiaoxiaoyi.reggie.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @RestController
 @RequestMapping("/category")
@@ -55,6 +51,25 @@ public class CategoryController {
 
         // 4. 返回查询结果
         return R.success(res);
+    }
+
+    /**
+     * 删除分类功能
+     * 需要判断分类有无关联菜品，如果有则无法删除
+     *
+     * @param ids
+     * @return
+     */
+    @DeleteMapping()
+    public R<String> remove(@RequestParam(value = "ids", required = false) Long ids) {
+
+        log.info("删除分类id：{}", ids);
+
+        if (categoryService.removeById(ids)) {
+            return R.success("删除成功！");
+        }
+
+        return R.error("删除失败！");
     }
 
 }
