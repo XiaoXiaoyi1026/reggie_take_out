@@ -1,12 +1,8 @@
 package com.xiaoxiaoyi.reggie.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -54,6 +50,7 @@ public class Category implements Serializable {
 
 
     //是否删除
+    @TableField(exist = false)
     private Integer isDeleted;
 
 }
