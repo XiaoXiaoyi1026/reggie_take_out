@@ -65,11 +65,9 @@ public class CategoryController {
 
         log.info("删除分类id：{}", ids);
 
-        if (categoryService.removeById(ids)) {
-            return R.success("删除成功！");
-        }
+        categoryService.remove(ids);
 
-        return R.error("删除失败！");
+        return R.success("删除成功！");
     }
 
 }

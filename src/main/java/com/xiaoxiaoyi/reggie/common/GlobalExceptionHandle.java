@@ -41,4 +41,21 @@ public class GlobalExceptionHandle {
         return R.error("未知错误：" + message);
     }
 
+    /**
+     * 负责拦截业务异常
+     *
+     * @param ex
+     * @return
+     */
+    @ExceptionHandler(CustomException.class)
+    public R<String> exceptionHandle(CustomException ex) {
+
+        String message = ex.getMessage();
+        // 日志打印异常信息
+        log.error(message);
+
+        // 返回未知错误
+        return R.error("删除失败：" + message);
+    }
+
 }
