@@ -55,7 +55,7 @@ public class LoginCheckFilter implements Filter {
             BaseContext.setCurrentId(currentId);
 
             long id = Thread.currentThread().getId();
-            log.info("当前执行到LoginCheckFilter.doFilter方法的线程id为：{}", id);
+            log.info("thread id:{}", id);
 
             // 放行
             filterChain.doFilter(request, response);

@@ -40,7 +40,7 @@ public class MyMetaObjectHandle implements MetaObjectHandler {
     public void updateFill(MetaObject metaObject) {
 
         long id = Thread.currentThread().getId();
-        log.info("当前执行到MyMetaObjectHandle.updateFill方法的线程id为：{}", id);
+        log.info("thread id:{}", id);
 
         log.info("公共字段自动填充[update]...");
         metaObject.setValue("updateTime", LocalDateTime.now());

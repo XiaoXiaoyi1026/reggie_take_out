@@ -53,18 +53,22 @@ public class Dish implements Serializable {
     private Integer sort;
 
 
+    // 插入时自动填充元数据
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
 
+    // 插入或者更新时自动填充元数据
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
 
+    // 插入时自动填充元数据
     @TableField(fill = FieldFill.INSERT)
     private Long createUser;
 
 
+    // 插入或者更新时自动填充元数据
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
 
