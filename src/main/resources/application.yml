@@ -20,3 +20,6 @@ mybatis-plus:
     db-config:
       # 主键生成策略
       id-type: assign_id
+
+reggie:
+  img-path: D:\Download\Java\spring-boot\reggie_take_out\Image\
