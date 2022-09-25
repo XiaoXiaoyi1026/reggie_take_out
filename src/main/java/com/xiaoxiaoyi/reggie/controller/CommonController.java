@@ -3,14 +3,12 @@ package com.xiaoxiaoyi.reggie.controller;
 import com.xiaoxiaoyi.reggie.common.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.util.UUID;
 
 /**
@@ -61,6 +59,32 @@ public class CommonController {
         }
         // 返回文件名称，用于添加进数据库
         return R.success(fileName);
+    }
+
+    /**
+     * 图片下载接口
+     *
+     * @param name 下载的目标图片名称
+     * @param response 页面响应，用于获取输出流向页面输出图片信息
+     */
+    @GetMapping("/download")
+    public void download(String name, HttpServletResponse response) {
+        try {
+            // 1. 从本地目录中读取目标图片
+            FileInputStream inputStream = new FileInputStream(new File(imgPath + name));
+            // 2. 使用response的输出流输出到页面
+            response.setHeader("content-type", "image/jpg");
+            ServletOutputStream outputStream = response.getOutputStream();
+            int len = 0;
+            // 每次读1M
+            byte[] bytes = new byte[1024];
+            // 当还没有读完时
+            while ((len = inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
