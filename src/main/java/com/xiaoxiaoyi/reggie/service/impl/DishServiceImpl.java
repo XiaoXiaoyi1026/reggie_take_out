@@ -1,5 +1,6 @@
 package com.xiaoxiaoyi.reggie.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaoxiaoyi.reggie.dto.DishDto;
 import com.xiaoxiaoyi.reggie.entity.Dish;
@@ -8,12 +9,14 @@ import com.xiaoxiaoyi.reggie.mapper.DishMapper;
 import com.xiaoxiaoyi.reggie.service.DishFlavorService;
 import com.xiaoxiaoyi.reggie.service.DishService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,5 +48,27 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             dishFlavorService.saveBatch(flavors);
         } catch (Exception e) {
         }
+    }
+
+    /**
+     * 根据id查询菜品以及对应的口味信息
+     *
+     * @param id 菜品id
+     * @return DishDto
+     */
+    @Override
+    public DishDto getDishAndFlavorsById(Long id) {
+        // 1. 根绝id查询菜品的基本信息
+        Dish dish = this.getById(id);
+        // 2. 创建一个DishDto对象，并将菜品的基本信息拷贝至其中
+        DishDto dishDto = new DishDto();
+        BeanUtils.copyProperties(dish, dishDto);
+        // 3. 再根据id查询flavors信息
+        LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DishFlavor::getDishId, id);
+        List<DishFlavor> dishFlavors = dishFlavorService.list(queryWrapper);
+        // 4. 将flavor信息封装进dishDto对象中
+        dishDto.setFlavors(dishFlavors);
+        return dishDto;
     }
 }
