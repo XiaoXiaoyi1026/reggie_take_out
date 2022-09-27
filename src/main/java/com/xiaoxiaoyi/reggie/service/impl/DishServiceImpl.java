@@ -76,7 +76,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
      * @param dishDto dishDto信息
      */
     @Override
-    public void updateDishAndFlavorById(DishDto dishDto) {
+    public void updateDishAndFlavorsById(DishDto dishDto) {
         // 1. 根据dishDto更新dish
         this.updateById(dishDto);
         // 2. 使用saveOrUpdate修改dish_flavors的信息
@@ -93,5 +93,23 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
         // 2.4 执行saveOrUpdateBatch方法更新dish_flavors表中的值
         dishFlavorService.saveOrUpdateBatch(flavors);
+    }
+
+    /**
+     * 根据dishId删除dish和flavors
+     *
+     * @param idStrings dishIds
+     */
+    @Override
+    public void deleteDishAndFlavorsById(String[] idStrings) {
+        for (String id : idStrings) {
+            Long dishId = Long.parseLong(id);
+            // 1. 删除dish表中的菜品
+            this.removeById(dishId);
+            // 2. 删除dish_flavors中对应的记录
+            LambdaQueryWrapper<DishFlavor> dishFlavorLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            dishFlavorLambdaQueryWrapper.eq(DishFlavor::getDishId, dishId);
+            dishFlavorService.remove(dishFlavorLambdaQueryWrapper);
+        }
     }
 }

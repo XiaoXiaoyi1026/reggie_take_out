@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -126,7 +128,35 @@ public class DishController {
      */
     @PutMapping
     public R<String> updateDishAndFlavorsById(@RequestBody DishDto dishDto) {
-        dishService.updateDishAndFlavorById(dishDto);
+        dishService.updateDishAndFlavorsById(dishDto);
         return R.success("修改成功！");
     }
+
+    /**
+     * 更新菜品售卖状态
+     *
+     * @param status 更新后的状态 0 停售 1 起售
+     * @return 更新信息
+     */
+    @PostMapping("/status/{status}")
+    public R<String> updateDishStatusById(@PathVariable Integer status, @RequestParam("ids") String idsString) {
+        String[] idStrings = idsString.split(",");
+        log.info("status:{} ids:{}", status, Arrays.toString(idStrings));
+        Dish dish = new Dish();
+        dish.setStatus(status);
+        for (String id : idStrings) {
+            dish.setId(Long.parseLong(id));
+            dishService.updateById(dish);
+        }
+        return R.success("修改成功！");
+    }
+
+    @DeleteMapping
+    public R<String> deleteDishById(@RequestParam("ids") String idsString) {
+        String[] idStrings = idsString.split(",");
+        log.info("ids:{}", Arrays.toString(idStrings));
+        dishService.deleteDishAndFlavorsById(idStrings);
+        return R.success("删除菜品成功！");
+    }
+
 }

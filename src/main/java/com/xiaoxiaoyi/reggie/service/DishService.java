@@ -7,6 +7,8 @@ import com.xiaoxiaoyi.reggie.entity.Dish;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface DishService extends IService<Dish> {
 
     /**
@@ -28,8 +30,15 @@ public interface DishService extends IService<Dish> {
     /**
      * 根据dishId修改信息
      *
-     * @param dishDto
+     * @param dishDto dto信息
      */
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
-    void updateDishAndFlavorById(DishDto dishDto);
+    void updateDishAndFlavorsById(DishDto dishDto);
+
+    /**
+     * 根据dishId删除dish和flavors
+     *
+     * @param idStrings dishIds
+     */
+    void deleteDishAndFlavorsById(String[] idStrings);
 }
