@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.dto.DishDto;
 import com.xiaoxiaoyi.reggie.entity.Dish;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface DishService extends IService<Dish> {
 
@@ -12,6 +14,7 @@ public interface DishService extends IService<Dish> {
      *
      * @param dishDto
      */
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
     void saveWithFlavor(DishDto dishDto);
 
     /**
@@ -21,4 +24,12 @@ public interface DishService extends IService<Dish> {
      * @return DishDto
      */
     DishDto getDishAndFlavorsById(Long id);
+
+    /**
+     * 根据dishId修改信息
+     *
+     * @param dishDto
+     */
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
+    void updateDishAndFlavorById(DishDto dishDto);
 }

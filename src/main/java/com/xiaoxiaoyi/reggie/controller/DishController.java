@@ -117,4 +117,16 @@ public class DishController {
         DishDto dishDto = dishService.getDishAndFlavorsById(id);
         return R.success(dishDto);
     }
+
+    /**
+     * 根据菜品id修改其信息
+     *
+     * @param dishDto dishDto信息
+     * @return 成功信息
+     */
+    @PutMapping
+    public R<String> updateDishAndFlavorsById(@RequestBody DishDto dishDto) {
+        dishService.updateDishAndFlavorById(dishDto);
+        return R.success("修改成功！");
+    }
 }

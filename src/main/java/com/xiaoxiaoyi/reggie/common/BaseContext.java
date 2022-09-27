@@ -6,7 +6,7 @@ package com.xiaoxiaoyi.reggie.common;
  * 作用域在单个线程内，多个线程之间互不影响
  */
 public class BaseContext {
-    private static ThreadLocal<Long> threadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<Long> threadLocal = new ThreadLocal<>();
 
     /**
      * 保存变量

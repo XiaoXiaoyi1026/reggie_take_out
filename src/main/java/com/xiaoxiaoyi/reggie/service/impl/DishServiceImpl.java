@@ -23,31 +23,29 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
 
-    // 操作dish_flavor需要
+    /**
+     * 菜品flavors相关服务
+     */
     @Autowired
     private DishFlavorService dishFlavorService;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
     public void saveWithFlavor(DishDto dishDto) {
-        try {
-            // 1. 将菜品基本信息添加到dish表，这里this指的就是dishService
-            this.save(dishDto);
+        // 1. 将菜品基本信息添加到dish表，这里this指的就是dishService
+        this.save(dishDto);
 
-            // 2. 存储菜品口味信息
-            // 由于传过来的flavors中没有dishId的信息,所以需要手动进行封装
-            // 获取flavor数组
-            List<DishFlavor> flavors = dishDto.getFlavors();
-            // 将数组转成流对象进行操作，peek用于不改变流中元素本身的类型而只操作其内容，map可以改变流中的元素类型，派生出另外一种元素类型
-            flavors = flavors.stream().peek((item) -> {
-                // 注入菜品dishId
-                item.setDishId(dishDto.getId());
-            }).collect(Collectors.toList());    // 流转换回列表对象
+        // 2. 存储菜品口味信息
+        // 由于传过来的flavors中没有dishId的信息,所以需要手动进行封装
+        // 获取flavor数组
+        List<DishFlavor> flavors = dishDto.getFlavors();
+        // 将数组转成流对象进行操作，peek用于不改变流中元素本身的类型而只操作其内容，map可以改变流中的元素类型，派生出另外一种元素类型
+        flavors = flavors.stream().peek((item) -> {
+            // 注入菜品dishId
+            item.setDishId(dishDto.getId());
+        }).collect(Collectors.toList());
 
-            // 添加进dish_flavor表中
-            dishFlavorService.saveBatch(flavors);
-        } catch (Exception e) {
-        }
+        // 添加进dish_flavor表中
+        dishFlavorService.saveBatch(flavors);
     }
 
     /**
@@ -70,5 +68,30 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         // 4. 将flavor信息封装进dishDto对象中
         dishDto.setFlavors(dishFlavors);
         return dishDto;
+    }
+
+    /**
+     * 感觉dishId修改其信息
+     *
+     * @param dishDto dishDto信息
+     */
+    @Override
+    public void updateDishAndFlavorById(DishDto dishDto) {
+        // 1. 根据dishDto更新dish
+        this.updateById(dishDto);
+        // 2. 使用saveOrUpdate修改dish_flavors的信息
+        // 2.1 给所有flavors设置上dishId的信息
+        List<DishFlavor> flavors = dishDto.getFlavors();
+        flavors = flavors.stream().peek(
+                        (item) -> item.setDishId(dishDto.getId()))
+                .collect(Collectors.toList());
+        // 2.2 构造Lambda查询条件
+        LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DishFlavor::getDishId, dishDto.getId());
+        // 2.3 删除原来数据表中的flavors数据
+        dishFlavorService.remove(queryWrapper);
+
+        // 2.4 执行saveOrUpdateBatch方法更新dish_flavors表中的值
+        dishFlavorService.saveOrUpdateBatch(flavors);
     }
 }
