@@ -40,5 +40,6 @@ public interface DishService extends IService<Dish> {
      *
      * @param idStrings dishIds
      */
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
     void deleteDishAndFlavorsById(String[] idStrings);
 }

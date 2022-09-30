@@ -151,6 +151,12 @@ public class DishController {
         return R.success("修改成功！");
     }
 
+    /**
+     * 根据id删除菜品
+     *
+     * @param idsString
+     * @return
+     */
     @DeleteMapping
     public R<String> deleteDishById(@RequestParam("ids") String idsString) {
         String[] idStrings = idsString.split(",");

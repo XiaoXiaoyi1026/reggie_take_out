@@ -12,11 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -104,12 +101,22 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     public void deleteDishAndFlavorsById(String[] idStrings) {
         for (String id : idStrings) {
             Long dishId = Long.parseLong(id);
-            // 1. 删除dish表中的菜品
-            this.removeById(dishId);
-            // 2. 删除dish_flavors中对应的记录
-            LambdaQueryWrapper<DishFlavor> dishFlavorLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            dishFlavorLambdaQueryWrapper.eq(DishFlavor::getDishId, dishId);
-            dishFlavorService.remove(dishFlavorLambdaQueryWrapper);
+            Dish dish = this.getById(dishId);
+            if (dish.getStatus() == 1) {
+                return;
+            } else {
+                // 1. 更新is_deleted字段
+                dish.setIsDeleted(1);
+                this.updateById(dish);
+                // 2. 更新dish_flavors中对应的记录
+                LambdaQueryWrapper<DishFlavor> dishFlavorLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                dishFlavorLambdaQueryWrapper.eq(DishFlavor::getDishId, dishId);
+                List<DishFlavor> dishFlavors = dishFlavorService.list(dishFlavorLambdaQueryWrapper);
+                for (DishFlavor dishFlavor : dishFlavors) {
+                    dishFlavor.setIsDeleted(1);
+                    dishFlavorService.updateById(dishFlavor);
+                }
+            }
         }
     }
 }
