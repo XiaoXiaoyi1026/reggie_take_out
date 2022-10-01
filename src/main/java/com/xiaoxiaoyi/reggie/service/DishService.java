@@ -38,8 +38,8 @@ public interface DishService extends IService<Dish> {
     /**
      * 根据dishId删除dish和flavors
      *
-     * @param idStrings dishIds
+     * @param ids dishIds
      */
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
-    void deleteDishAndFlavorsById(String[] idStrings);
+    void deleteDishAndFlavorsByIds(List<Long> ids);
 }

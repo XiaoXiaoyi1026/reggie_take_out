@@ -2,6 +2,7 @@ package com.xiaoxiaoyi.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoxiaoyi.reggie.common.CustomException;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.dto.DishDto;
 import com.xiaoxiaoyi.reggie.entity.Category;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -139,30 +142,40 @@ public class DishController {
      * @return 更新信息
      */
     @PostMapping("/status/{status}")
-    public R<String> updateDishStatusById(@PathVariable Integer status, @RequestParam("ids") String idsString) {
-        String[] idStrings = idsString.split(",");
-        log.info("status:{} ids:{}", status, Arrays.toString(idStrings));
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
+    public R<String> updateDishStatusByIds(@PathVariable Integer status, @RequestParam("ids") List<Long> ids) {
+        log.info("status:{} ids:{}", status, ids);
+
+        // 先判断是否有需要更新状态的dish
+        // select count(*) form dish where id in (2, 3) and status == 1;
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper =
+                new LambdaQueryWrapper<>();
+        dishLambdaQueryWrapper.in(Dish::getId, ids);
+        dishLambdaQueryWrapper.eq(Dish::getStatus, status == 0 ? 1 : 0);
+        int count = dishService.count(dishLambdaQueryWrapper);
+
+        if (count == 0) {
+            throw new CustomException("不存在需要修改状态的菜品");
+        }
+        // 如果存在需要修改的菜品则进行修改
         Dish dish = new Dish();
         dish.setStatus(status);
-        for (String id : idStrings) {
-            dish.setId(Long.parseLong(id));
-            dishService.updateById(dish);
-        }
+        dishService.update(dish, dishLambdaQueryWrapper);
+
         return R.success("修改成功！");
     }
 
     /**
      * 根据id删除菜品
      *
-     * @param idsString
-     * @return
+     * @param ids ids
+     * @return 信息
      */
     @DeleteMapping
-    public R<String> deleteDishById(@RequestParam("ids") String idsString) {
-        String[] idStrings = idsString.split(",");
-        log.info("ids:{}", Arrays.toString(idStrings));
-        dishService.deleteDishAndFlavorsById(idStrings);
-        return R.success("删除菜品成功！");
+    public R<String> deleteDishById(@RequestParam("ids") List<Long> ids) {
+        log.info("ids: {}", ids);
+        dishService.deleteDishAndFlavorsByIds(ids);
+        return R.success("删除成功！");
     }
 
     /**

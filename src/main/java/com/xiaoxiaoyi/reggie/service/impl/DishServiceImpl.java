@@ -2,6 +2,8 @@ package com.xiaoxiaoyi.reggie.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xiaoxiaoyi.reggie.common.CustomException;
+import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.dto.DishDto;
 import com.xiaoxiaoyi.reggie.entity.Dish;
 import com.xiaoxiaoyi.reggie.entity.DishFlavor;
@@ -11,8 +13,14 @@ import com.xiaoxiaoyi.reggie.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +33,10 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
      */
     @Autowired
     private DishFlavorService dishFlavorService;
+
+    @Value("${reggie.img-path}")
+    private String imgPath;
+
 
     @Override
     public void saveWithFlavor(DishDto dishDto) {
@@ -68,7 +80,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     }
 
     /**
-     * 感觉dishId修改其信息
+     * 根据dishId修改其信息
      *
      * @param dishDto dishDto信息
      */
@@ -95,28 +107,41 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 根据dishId删除dish和flavors
      *
-     * @param idStrings dishIds
+     * @param ids dishIds
      */
     @Override
-    public void deleteDishAndFlavorsById(String[] idStrings) {
-        for (String id : idStrings) {
-            Long dishId = Long.parseLong(id);
-            Dish dish = this.getById(dishId);
-            if (dish.getStatus() == 1) {
-                return;
-            } else {
-                // 1. 更新is_deleted字段
-                dish.setIsDeleted(1);
-                this.updateById(dish);
-                // 2. 更新dish_flavors中对应的记录
-                LambdaQueryWrapper<DishFlavor> dishFlavorLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                dishFlavorLambdaQueryWrapper.eq(DishFlavor::getDishId, dishId);
-                List<DishFlavor> dishFlavors = dishFlavorService.list(dishFlavorLambdaQueryWrapper);
-                for (DishFlavor dishFlavor : dishFlavors) {
-                    dishFlavor.setIsDeleted(1);
-                    dishFlavorService.updateById(dishFlavor);
-                }
+    public void deleteDishAndFlavorsByIds(List<Long> ids) {
+        // 1. 判断是否存在启售的dish
+        // select count(*) from dish where id in (1, 2) and status == 1;
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper =
+                new LambdaQueryWrapper<>();
+        dishLambdaQueryWrapper.in(Dish::getId, ids);
+        // 启售 1 停售 0
+        dishLambdaQueryWrapper.eq(Dish::getStatus, 1);
+
+        int count = this.count(dishLambdaQueryWrapper);
+        if (count > 0) {
+            throw new CustomException("菜品尚在售卖！！");
+        }
+
+        // 删除图片
+        for (Long id : ids) {
+            try {
+                Dish dish = this.getById(id);
+                Files.delete(Paths.get(imgPath + dish.getImage()));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
+
+        // 菜品都不在售卖，则删除dish
+        this.removeByIds(ids);
+
+        // 删除dish_flavors
+        LambdaQueryWrapper<DishFlavor> dishFlavorLambdaQueryWrapper =
+                new LambdaQueryWrapper<>();
+        dishFlavorLambdaQueryWrapper.in(DishFlavor::getDishId, ids);
+
+        dishFlavorService.remove(dishFlavorLambdaQueryWrapper);
     }
 }

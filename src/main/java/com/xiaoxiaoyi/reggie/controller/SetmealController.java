@@ -2,6 +2,7 @@ package com.xiaoxiaoyi.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoxiaoyi.reggie.common.CustomException;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.dto.SetmealDto;
 import com.xiaoxiaoyi.reggie.entity.Category;
@@ -13,10 +14,16 @@ import com.xiaoxiaoyi.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +43,12 @@ public class SetmealController {
 
     @Autowired
     private CategoryService categoryService;
+
+    /**
+     * 图片根路径，用于删除图片
+     */
+    @Value("${reggie.img-path}")
+    private String imgPath;
 
     /**
      * 保存套餐
@@ -128,43 +141,6 @@ public class SetmealController {
     }
 
     /**
-     * 根据id删除
-     *
-     * @param ids 删除ids
-     * @return 信息
-     */
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
-    @DeleteMapping
-    public R<String> deleteByIds(@RequestParam String ids) {
-        // 切割出id
-        String[] tmplIds = ids.split(",");
-        for (String id : tmplIds) {
-            long cur = Long.parseLong(id);
-            // 根据id获取套餐
-            Setmeal setmeal = setmealService.getById(cur);
-            // 判断售卖状态
-            if (setmeal.getStatus() == 0) {
-                // 如果是停售状态则修改其is_deleted字段为1
-                setmeal.setIsDeleted(1);
-                setmealService.updateById(setmeal);
-                // 根据套餐id查询setmeal_dish
-                LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(SetmealDish::getSetmealId, Long.parseLong(id));
-                List<SetmealDish> list = setmealDishService.list(queryWrapper);
-                // 更新setmeal_dish的is_deleted字段
-                for (SetmealDish setmealDish : list) {
-                    setmealDish.setIsDeleted(1);
-                }
-                setmealDishService.updateBatchById(list);
-            } else {
-                // 如果是启售状态则直接返回
-                return R.error("套餐并未停售！");
-            }
-        }
-        return R.success("删除成功！");
-    }
-
-    /**
      * 修改套餐状态
      *
      * @param status 目标状态
@@ -173,17 +149,72 @@ public class SetmealController {
      */
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
     @PostMapping("/status/{status}")
-    public R<String> changeStatusById(@PathVariable Integer status, @RequestParam String ids) {
+    public R<String> changeStatusById(@PathVariable Integer status, @RequestParam List<Long> ids) {
+        log.info("status: {} ids: {}", status, ids);
 
-        String[] tmpIds = ids.split(",");
-        for (String id : tmpIds) {
-            Setmeal setmeal = new Setmeal();
-            setmeal.setId(Long.parseLong(id));
-            setmeal.setStatus(status);
-            setmealService.updateById(setmeal);
+        // 1. 先查询需要更新的套餐
+        LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper =
+                new LambdaQueryWrapper<>();
+        setmealLambdaQueryWrapper.in(Setmeal::getId, ids);
+        setmealLambdaQueryWrapper.eq(Setmeal::getStatus, status == 0 ? 1 : 0);
+
+        int count = setmealService.count(setmealLambdaQueryWrapper);
+        if (count == 0) {
+            throw new CustomException("不存在需要更新的套餐");
         }
 
-        return R.success("修改成功！");
+        // update setmeal set status = 1 where id in (1, 2);
+        Setmeal setmeal = new Setmeal();
+        setmeal.setStatus(status);
+        setmealService.update(setmeal, setmealLambdaQueryWrapper);
+
+        return R.success("状态更新成功！");
+    }
+
+    /**
+     * 根据id删除
+     *
+     * @param ids 删除ids
+     * @return 信息
+     */
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
+    @DeleteMapping
+    public R<String> deleteByIds(@RequestParam List<Long> ids) {
+        log.info("参数：{}", ids);
+
+        // 1. select count(*) form setmeal where id in (1, 2, 3) where status = 1;
+        // 查询ids中启售状态的套餐数
+        LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper =
+                new LambdaQueryWrapper<>();
+        setmealLambdaQueryWrapper.in(Setmeal::getId, ids);
+        setmealLambdaQueryWrapper.eq(Setmeal::getStatus, 1);
+
+        int count = setmealService.count(setmealLambdaQueryWrapper);
+        if (count > 0) {
+            // 如果存在启售状态的套餐
+            throw new CustomException("套餐尚在售卖！！");
+        }
+
+        // 删除图片
+        for (Long id : ids) {
+            try {
+                Setmeal setmeal = setmealService.getById(id);
+                Files.delete(Paths.get(imgPath + setmeal.getImage()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 如果都停售了，则删除setmeal
+        setmealService.removeByIds(ids);
+
+        // delete from setmeal_dish where setmeal_id in (1, 2, 3);
+        // 删除setmeal_dish
+        LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper =
+                new LambdaQueryWrapper<>();
+        setmealDishLambdaQueryWrapper.in(SetmealDish::getSetmealId, ids);
+
+        return R.success("删除套餐成功！");
     }
 
     /**
