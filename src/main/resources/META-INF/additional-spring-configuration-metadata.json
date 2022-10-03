@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "server.mail.host",
+      "type": "java.lang.String",
+      "description": "Description for server.mail.host."
+  }
+] }

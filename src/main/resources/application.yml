@@ -11,6 +11,30 @@ spring:
       url: jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: 1026
+  mail:
+    host: smtp.qq.com
+    username: 2060924350@qq.com
+    password: efiojhzhgdyrcgea
+    default-encoding: UTF-8
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: true
+            required: true
+        display:
+          sendmail: Javen
+          sendname: ChairC's blog official
+    port: 465
+mail:
+  fromMail:
+    addr:
+      2060924350@qq.com
+
 mybatis-plus:
   configuration:
     # 在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
