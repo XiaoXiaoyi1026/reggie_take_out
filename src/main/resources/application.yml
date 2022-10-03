@@ -14,6 +14,7 @@ spring:
   mail:
     host: smtp.qq.com
     username: 2060924350@qq.com
+    # 访问码
     password: efiojhzhgdyrcgea
     default-encoding: UTF-8
     protocol: smtp
@@ -39,6 +40,7 @@ mybatis-plus:
   configuration:
     # 在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
     map-underscore-to-camel-case: true
+    # mybatis日志输入
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
@@ -46,4 +48,5 @@ mybatis-plus:
       id-type: assign_id
 
 reggie:
+  # 菜品图片资源路径
   img-path: D:\Download\Java\spring-boot\reggie_take_out\Image\
