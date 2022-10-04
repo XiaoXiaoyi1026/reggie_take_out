@@ -7,6 +7,7 @@ import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.dto.DishDto;
 import com.xiaoxiaoyi.reggie.entity.Category;
 import com.xiaoxiaoyi.reggie.entity.Dish;
+import com.xiaoxiaoyi.reggie.entity.DishFlavor;
 import com.xiaoxiaoyi.reggie.service.CategoryService;
 import com.xiaoxiaoyi.reggie.service.DishFlavorService;
 import com.xiaoxiaoyi.reggie.service.DishService;
@@ -181,9 +182,9 @@ public class DishController {
     /**
      * 根据category id 查询菜品数据
      *
-     * @param dish
-     * @return
-     */
+     * @param dish 菜品
+     * @return 列表
+     *//*
     @GetMapping("/list")
     public R<List<Dish>> getDishListByCategoryId(Dish dish) {
 
@@ -201,6 +202,43 @@ public class DishController {
         List<Dish> dishList = dishService.list(queryWrapper);
 
         return R.success(dishList);
+    }*/
+
+    /**
+     * 根据category id 查询菜品数据
+     *
+     * @param dish 菜品
+     * @return 列表
+     */
+    @GetMapping("/list")
+    public R<List<DishDto>> getDishListByCategoryId(Dish dish) {
+
+        // 构造查询条件
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
+
+        // 查询启售状态的菜品
+        queryWrapper.eq(Dish::getStatus, 1);
+
+        // 添加排序条件
+        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+
+        // 执行查询
+        List<Dish> dishList = dishService.list(queryWrapper);
+
+        // 将Dish结果转换成带Flavors的DishDto
+        List<DishDto> dishDtoList = dishList.stream().map((item) ->{
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(item, dishDto);
+            // 查询口味数据
+            LambdaQueryWrapper<DishFlavor> dishFlavorQueryWrapper = new LambdaQueryWrapper<>();
+            dishFlavorQueryWrapper.eq(DishFlavor::getDishId, item.getId());
+            // SQL: select * from dish_flavor where dish_id = ?;
+            dishDto.setFlavors(dishFlavorService.list(dishFlavorQueryWrapper));
+            return dishDto;
+        }).collect(Collectors.toList());
+
+        return R.success(dishDtoList);
     }
 
 }
