@@ -7,10 +7,10 @@ import com.xiaoxiaoyi.reggie.entity.ShoppingCart;
 import com.xiaoxiaoyi.reggie.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author xiaoxiaoyi
@@ -58,10 +58,76 @@ public class ShoppingCartController {
             // 如果不存在，则添加进购物车，默认数量为1
             shoppingCart.setNumber(1);
             shoppingCartService.save(shoppingCart);
+            // 添加创建时间
+            shoppingCart.setCreateTime(LocalDateTime.now());
             cartServiceOne = shoppingCart;
         }
 
         return R.success(cartServiceOne);
+    }
+
+    /**
+     * 减少购物车中的dish/setmeal数量
+     *
+     * @return 减少后的购物车
+     */
+    @PostMapping("/sub")
+    public R<ShoppingCart> shoppingCartSub(@RequestBody ShoppingCart shoppingCart) {
+        log.info("Shopping cart: {}", shoppingCart);
+        Long dishId = shoppingCart.getDishId();
+        LambdaQueryWrapper<ShoppingCart> shoppingCartLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (dishId != null) {
+            // 传进来的是dish
+            shoppingCartLambdaQueryWrapper.eq(ShoppingCart::getDishId, dishId);
+        } else {
+            // 传进来的是setmeal
+            shoppingCartLambdaQueryWrapper.eq(ShoppingCart::getSetmealId, shoppingCart.getSetmealId());
+        }
+        ShoppingCart cartServiceOne = shoppingCartService.getOne(shoppingCartLambdaQueryWrapper);
+        // 更新数量
+        cartServiceOne.setNumber(cartServiceOne.getNumber() - 1);
+        // 判断更新后数量是否为0
+        if (cartServiceOne.getNumber() == 0) {
+            // 为0则从购物车中移除该项
+            shoppingCartService.removeById(cartServiceOne.getId());
+        } else {
+            // 不为0则更新
+            shoppingCartService.updateById(cartServiceOne);
+        }
+
+        return R.success(cartServiceOne);
+    }
+
+    /**
+     * 查看购物车
+     *
+     * @return 购物车列表
+     */
+    @GetMapping("/list")
+    public R<List<ShoppingCart>> getShoppingCartList() {
+        log.info("查看购物车...");
+        // 根据当前登录的user_id查询
+        LambdaQueryWrapper<ShoppingCart> shoppingCartLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        shoppingCartLambdaQueryWrapper.eq(ShoppingCart::getUserId, BaseContext.getCurrentId());
+        // 根据创建时间降序排，先创建的(大的)排前面
+        shoppingCartLambdaQueryWrapper.orderByDesc(ShoppingCart::getCreateTime);
+        // 返回最新的购物车数据
+        return R.success(shoppingCartService.list(shoppingCartLambdaQueryWrapper));
+    }
+
+    /**
+     * 清空购物车
+     *
+     * @return 清空信息
+     */
+    @DeleteMapping("/clean")
+    public R<String> cleanShoppingCart() {
+        log.info("清空购物车...");
+        // 根据当前登录的用户id删除shopping_cart的记录
+        LambdaQueryWrapper<ShoppingCart> shoppingCartLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        shoppingCartLambdaQueryWrapper.eq(ShoppingCart::getUserId, BaseContext.getCurrentId());
+        shoppingCartService.remove(shoppingCartLambdaQueryWrapper);
+        return R.success("购物车清空成功！");
     }
 
 }
