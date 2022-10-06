@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.xiaoxiaoyi.reggie.common.CustomException;
 import com.xiaoxiaoyi.reggie.common.R;
+import com.xiaoxiaoyi.reggie.dto.DishDto;
 import com.xiaoxiaoyi.reggie.dto.SetmealDto;
 import com.xiaoxiaoyi.reggie.entity.Category;
 import com.xiaoxiaoyi.reggie.entity.Dish;
 import com.xiaoxiaoyi.reggie.entity.Setmeal;
 import com.xiaoxiaoyi.reggie.entity.SetmealDish;
 import com.xiaoxiaoyi.reggie.service.CategoryService;
+import com.xiaoxiaoyi.reggie.service.DishService;
 import com.xiaoxiaoyi.reggie.service.SetmealDishService;
 import com.xiaoxiaoyi.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +24,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +45,9 @@ public class SetmealController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private DishService dishService;
 
     /**
      * 图片根路径，用于删除图片
@@ -261,28 +263,54 @@ public class SetmealController {
      * @return 菜品信息
      */
     @GetMapping("/list")
-    public R<List<SetmealDto>> getSetmealDishesByCategoryId(Setmeal setmeal) {
+    public R<List<Setmeal>> getSetmealDishesByCategoryId(Setmeal setmeal) {
         log.info("categoryId: {} status: {}", setmeal.getCategoryId(), setmeal.getStatus());
 
         // 1. 根据categoryId查询setmeal
         LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        setmealLambdaQueryWrapper.eq(Setmeal::getCategoryId, setmeal.getCategoryId());
+        setmealLambdaQueryWrapper.eq(
+                setmeal.getCategoryId() != null,
+                Setmeal::getCategoryId,
+                setmeal.getCategoryId());
+        setmealLambdaQueryWrapper.eq(
+                setmeal.getStatus() != null,
+                Setmeal::getStatus,
+                setmeal.getStatus());
 
         List<Setmeal> setmealList = setmealService.list(setmealLambdaQueryWrapper);
 
-        List<SetmealDto> setmealDtoList = setmealList.stream().map((item) -> {
-            SetmealDto setmealDto = new SetmealDto();
-            BeanUtils.copyProperties(item, setmealDto);
-            LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            setmealDishLambdaQueryWrapper.eq(SetmealDish::getSetmealId, item.getId());
+        return R.success(setmealList);
+    }
 
-            // SQL: select * from setmeal_dish where setmeal_id = ?
-            setmealDto.setSetmealDishes(setmealDishService.list(setmealDishLambdaQueryWrapper));
-
-            return setmealDto;
+    /**
+     * 根据套餐id获取其对应的菜品信息
+     *
+     * @return
+     */
+    @GetMapping("/dish/{setMealId}")
+    public R<List<DishDto>> getDishesBySetMealId(@PathVariable Long setMealId) {
+        log.info("setMealId: {}", setMealId);
+        // 根据setMealId查询对应套餐的菜品信息
+        // SQL: select * from setmeal_dish where setmeal_id = ?
+        LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        setmealDishLambdaQueryWrapper.eq(SetmealDish::getSetmealId, setMealId);
+        List<SetmealDish> setmealDishList = setmealDishService.list(setmealDishLambdaQueryWrapper);
+        List<Long> dishIds = setmealDishList.stream().map(
+                SetmealDish::getDishId)
+                .collect(Collectors.toList());
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // SQL: select * from dish where id in (1, 2, ...)
+        dishLambdaQueryWrapper.in(Dish::getId, dishIds);
+        List<Dish> dishes = dishService.list(dishLambdaQueryWrapper);
+        List<DishDto> dishDtoList = dishes.stream().map((dish) -> {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(dish, dishDto);
+            return dishDto;
         }).collect(Collectors.toList());
-
-        return R.success(setmealDtoList);
+        for (int i = 0; i < dishDtoList.size(); i++) {
+            dishDtoList.get(i).setCopies(setmealDishList.get(i).getCopies());
+        }
+        return R.success(dishDtoList);
     }
 
 }

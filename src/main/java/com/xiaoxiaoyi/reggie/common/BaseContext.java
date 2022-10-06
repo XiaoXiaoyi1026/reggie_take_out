@@ -11,7 +11,7 @@ public class BaseContext {
     /**
      * 保存变量
      *
-     * @param id
+     * @param id 用户id
      */
     public static void setCurrentId(Long id) {
         threadLocal.set(id);
@@ -20,7 +20,7 @@ public class BaseContext {
     /**
      * 获取变量
      *
-     * @return
+     * @return 用户id
      */
     public static Long getCurrentId() {
         return threadLocal.get();
