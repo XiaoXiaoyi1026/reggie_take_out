@@ -7,6 +7,7 @@ import com.xiaoxiaoyi.reggie.entity.Category;
 import com.xiaoxiaoyi.reggie.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +21,15 @@ public class CategoryController {
     private CategoryService categoryService;
 
     /**
+     * 操作Redis
+     */
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
+
+    /**
      * 新建分类
      *
-     * @return
+     * @return 信息
      */
     @PostMapping
     public R<String> save(@RequestBody Category category) {
@@ -93,6 +100,10 @@ public class CategoryController {
      */
     @GetMapping("/list")
     public R<List<Category>> list(Category category) {
+
+        // 构造key
+
+
         // 1. 创建条件查询器
         LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
         // 2. 添加判断与排序条件
