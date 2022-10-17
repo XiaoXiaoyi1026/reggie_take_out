@@ -10,11 +10,14 @@ import com.xiaoxiaoyi.reggie.utils.ValidateCodeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.bind.annotation.*;
 
 import javax.jws.soap.SOAPBinding;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RequestMapping("/user")
 @RestController
@@ -26,6 +29,12 @@ public class UserController {
 
     @Autowired
     private MailService mailService;
+
+    /**
+     * 操作redis
+     */
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
 
     /**
      * 发送验证码短信(模拟)
@@ -55,7 +64,11 @@ public class UserController {
             // 模拟查看验证码
             log.info("code: {}", code);
             // 4. 验证码存入session，以便用户点击登录时进行校验，根据用户的手机号码进行划分
-            httpSession.setAttribute(phoneNumber, code);
+            // httpSession.setAttribute(phoneNumber, code);
+
+            // 优化：将生成的验证码存入redis，并设置过期时间为5分钟
+            redisTemplate.opsForValue().set(phoneNumber, code, 5 , TimeUnit.MINUTES);
+
             return R.success("验证码发送成功！");
         }
 
@@ -79,8 +92,13 @@ public class UserController {
         String phone = map.get("phone");
         String code = map.get("code");
 
+
+
         // 2. 从session根据手机号取出保存的验证码
-        Object codeInSession = httpSession.getAttribute(phone);
+        // Object codeInSession = httpSession.getAttribute(phone);
+
+        // 优化：从redis中获取验证码
+        Object codeInSession = redisTemplate.opsForValue().get(phone);
 
         // 3. 进行比对(比对正确登陆成功)
 
@@ -104,6 +122,10 @@ public class UserController {
             }
             // 将userId存入session，以通过前端filter校验
             httpSession.setAttribute("user", user.getId());
+
+            // 删除redis缓存的验证码
+            redisTemplate.delete(phone);
+
             // 向前端返回登录的用户信息
             return R.success(user);
         }

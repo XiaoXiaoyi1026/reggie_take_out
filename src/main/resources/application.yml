@@ -4,12 +4,6 @@ spring:
   application:
     # 指定应用的名称(可选)
     name: reggie_take_out
-  # redis相关配置
-  redis:
-    host: 10.190.67.128
-    port: 6379
-    password: XYX1026kwi!!
-    database: 0
   # 数据源
   datasource:
     druid:
@@ -17,6 +11,12 @@ spring:
       url: jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: 1026
+  # redis相关配置
+  redis:
+    host: 10.190.67.128
+    port: 6379
+    password: XYX1026kwi!!
+    database: 0
   mail:
     host: smtp.qq.com
     username: 2060924350@qq.com
