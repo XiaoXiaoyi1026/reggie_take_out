@@ -4,6 +4,12 @@ spring:
   application:
     # 指定应用的名称(可选)
     name: reggie_take_out
+  # redis相关配置
+  redis:
+    host: 10.190.67.128
+    port: 6379
+    password: XYX1026kwi!!
+    database: 0
   # 数据源
   datasource:
     druid:
