@@ -17,6 +17,10 @@ spring:
     port: 6379
     password: XYX1026kwi!!
     database: 0
+  # 设置缓存数据的过期时间
+  cache:
+    redis:
+      time-to-live: 1800000
   mail:
     host: smtp.qq.com
     username: 2060924350@qq.com

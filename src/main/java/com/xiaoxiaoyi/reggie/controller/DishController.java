@@ -14,6 +14,8 @@ import com.xiaoxiaoyi.reggie.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,8 +56,8 @@ public class DishController {
     /**
      * 操作redis
      */
-    @Autowired
-    private RedisTemplate<Object, Object> redisTemplate;
+    /*@Autowired
+    private RedisTemplate<Object, Object> redisTemplate;*/
 
     /**
      * 新增菜品
@@ -64,6 +66,7 @@ public class DishController {
      * @return 信息
      */
     @PostMapping
+    @CacheEvict(value = "dish", key = "#dishDto.id")
     public R<String> add(@RequestBody DishDto dishDto) {
         log.info(dishDto.toString());
 
@@ -75,8 +78,8 @@ public class DishController {
         redisTemplate.delete(keys);*/
 
         // 定向清理
-        String key = "dish_" + dishDto.getCategoryId() + "*";
-        redisTemplate.delete(key);
+        /*String key = "dish_" + dishDto.getCategoryId() + "*";
+        redisTemplate.delete(key);*/
 
         return R.success("新增菜品成功！");
     }
@@ -138,6 +141,7 @@ public class DishController {
      * @return DishDto
      */
     @GetMapping("/{id}")
+    @Cacheable(value = "dish", key = "#id", unless = "#result.data == null")
     public R<DishDto> getDishAndFlavorById(@PathVariable Long id) {
 
         DishDto dishDto = dishService.getDishAndFlavorsById(id);
@@ -152,15 +156,31 @@ public class DishController {
      * @return 成功信息
      */
     @PutMapping
+    @CacheEvict(value = "dish", key = "#dishDto.id")
     public R<String> updateDishAndFlavorsById(@RequestBody DishDto dishDto) {
 
         dishService.updateDishAndFlavorsById(dishDto);
 
-        // 定向清理
+        /*// 定向清理
         String key = "dish_" + dishDto.getCategoryId() + "*";
-        redisTemplate.delete(key);
+        redisTemplate.delete(key);*/
 
         return R.success("修改成功！");
+    }
+
+    /**
+     * 根据id删除菜品
+     *
+     * @param ids ids
+     * @return 信息
+     */
+    @DeleteMapping
+    @CacheEvict(value = "dish", allEntries = true)
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
+    public R<String> deleteDishById(@RequestParam("ids") List<Long> ids) {
+        log.info("ids: {}", ids);
+        dishService.deleteDishAndFlavorsByIds(ids);
+        return R.success("删除成功！");
     }
 
     /**
@@ -171,6 +191,7 @@ public class DishController {
      */
     @PostMapping("/status/{status}")
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
+    @CacheEvict(value = "dish", allEntries = true)
     public R<String> updateDishStatusByIds(@PathVariable Integer status, @RequestParam("ids") List<Long> ids) {
         log.info("status:{} ids:{}", status, ids);
 
@@ -195,24 +216,12 @@ public class DishController {
     }
 
     /**
-     * 根据id删除菜品
-     *
-     * @param ids ids
-     * @return 信息
-     */
-    @DeleteMapping
-    public R<String> deleteDishById(@RequestParam("ids") List<Long> ids) {
-        log.info("ids: {}", ids);
-        dishService.deleteDishAndFlavorsByIds(ids);
-        return R.success("删除成功！");
-    }
-
-    /**
      * 根据category id 查询菜品数据
      *
      * @param dish 菜品
      * @return 列表
-     *//*
+     */
+    /*
     @GetMapping("/list")
     public R<List<Dish>> getDishListByCategoryId(Dish dish) {
 
@@ -239,11 +248,12 @@ public class DishController {
      * @return 列表
      */
     @GetMapping("/list")
+    @Cacheable(value = "dish", key = "#dish.categoryId + '_' + #dish.status")
     public R<List<DishDto>> getDishListByCategoryId(Dish dish) {
 
         List<DishDto> dishDtoList;
 
-        // 动态构造key
+        /*// 动态构造key
         String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
 
         // 从redis中获取缓存数据
@@ -253,7 +263,7 @@ public class DishController {
             // 如果存在直接返回
             return R.success(dishDtoList);
         }
-
+*/
         // 如果不存在则查询数据库，然后放入redis
 
         // 构造查询条件
@@ -281,8 +291,8 @@ public class DishController {
             return dishDto;
         }).collect(Collectors.toList());
 
-        // 将查询到的数据缓存到redis
-        redisTemplate.opsForValue().set(key, dishDtoList, 1, TimeUnit.HOURS);
+        /*// 将查询到的数据缓存到redis
+        redisTemplate.opsForValue().set(key, dishDtoList, 1, TimeUnit.HOURS);*/
 
         return R.success(dishDtoList);
     }

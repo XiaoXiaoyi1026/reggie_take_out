@@ -67,6 +67,9 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     public DishDto getDishAndFlavorsById(Long id) {
         // 1. 根绝id查询菜品的基本信息
         Dish dish = this.getById(id);
+        if (dish == null) {
+            throw new CustomException("查询菜品失败！");
+        }
         // 2. 创建一个DishDto对象，并将菜品的基本信息拷贝至其中
         DishDto dishDto = new DishDto();
         BeanUtils.copyProperties(dish, dishDto);
