@@ -87,4 +87,6 @@ mybatis-plus:
 
 reggie:
   # 菜品图片资源路径
-  img-path: D:\Download\Java\spring-boot\reggie_take_out\Image\
+#  img-path: D:\Download\Java\spring-boot\reggie_take_out\Image\
+  # linux上部署的图片路径
+  img-path: /usr/local/app/reggie/image
