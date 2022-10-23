@@ -6,11 +6,10 @@ import com.xiaoxiaoyi.reggie.common.BaseContext;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.entity.Orders;
 import com.xiaoxiaoyi.reggie.service.OrdersService;
+import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author xiaoxiaoyi
@@ -19,6 +18,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/order")
+@ApiModel("订单")
 public class OrdersController {
 
     @Autowired

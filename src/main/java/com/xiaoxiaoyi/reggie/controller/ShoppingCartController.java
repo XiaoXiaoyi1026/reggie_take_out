@@ -5,6 +5,7 @@ import com.xiaoxiaoyi.reggie.common.BaseContext;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.entity.ShoppingCart;
 import com.xiaoxiaoyi.reggie.service.ShoppingCartService;
+import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/shoppingCart")
 @Slf4j
+@ApiModel("购物车")
 public class ShoppingCartController {
 
     @Autowired

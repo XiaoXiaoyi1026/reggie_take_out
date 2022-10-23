@@ -1,6 +1,7 @@
 package com.xiaoxiaoyi.reggie.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
  * 分类
  */
 @Data
+@ApiModel("分类")
 public class Category implements Serializable {
 
     private static final long serialVersionUID = 1L;

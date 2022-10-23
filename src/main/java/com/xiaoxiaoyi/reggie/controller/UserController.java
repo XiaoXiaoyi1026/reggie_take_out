@@ -7,6 +7,7 @@ import com.xiaoxiaoyi.reggie.service.MailService;
 import com.xiaoxiaoyi.reggie.service.UserService;
 import com.xiaoxiaoyi.reggie.utils.SMSUtils;
 import com.xiaoxiaoyi.reggie.utils.ValidateCodeUtils;
+import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/user")
 @RestController
 @Slf4j
+@ApiModel("用户")
 public class UserController {
 
     @Autowired

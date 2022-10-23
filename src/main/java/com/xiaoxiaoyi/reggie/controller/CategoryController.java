@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiaoxiaoyi.reggie.common.R;
 import com.xiaoxiaoyi.reggie.entity.Category;
 import com.xiaoxiaoyi.reggie.service.CategoryService;
+import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/category")
 @Slf4j
+@ApiModel("菜品分类")
 public class CategoryController {
 
     @Autowired

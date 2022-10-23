@@ -11,6 +11,7 @@ import com.xiaoxiaoyi.reggie.entity.DishFlavor;
 import com.xiaoxiaoyi.reggie.service.CategoryService;
 import com.xiaoxiaoyi.reggie.service.DishFlavorService;
 import com.xiaoxiaoyi.reggie.service.DishService;
+import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/dish")
 @Slf4j
+@ApiModel("菜品")
 public class DishController {
 
     /**

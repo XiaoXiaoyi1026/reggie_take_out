@@ -1,6 +1,7 @@
 package com.xiaoxiaoyi.reggie.controller;
 
 import com.xiaoxiaoyi.reggie.common.R;
+import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/common")
 @Slf4j
+@ApiModel("通用")
 public class CommonController {
 
     @Value("${reggie.img-path}")

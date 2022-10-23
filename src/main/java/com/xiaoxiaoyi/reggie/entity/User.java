@@ -1,5 +1,6 @@
 package com.xiaoxiaoyi.reggie.entity;
 
+import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
  * 前端用户信息
  */
 @Data
+@ApiModel("用户")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;

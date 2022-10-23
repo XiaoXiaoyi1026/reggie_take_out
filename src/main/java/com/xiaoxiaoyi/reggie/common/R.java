@@ -1,5 +1,7 @@
 package com.xiaoxiaoyi.reggie.common;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,10 +15,12 @@ import java.util.Map;
  */
 
 @Data
+@ApiModel("返回结果")
 public class R<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @ApiModelProperty("请求状态")
     private Integer code; //编码：1成功，0和其它数字为失败
 
     private String msg; //错误信息
