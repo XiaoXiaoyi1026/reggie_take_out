@@ -59,4 +59,25 @@ public class OrdersController {
 
         return R.success(ordersPage);
     }
+
+    /**
+     * 用户订单分页查询
+     *
+     * @param page     页数
+     * @param pageSize 页面大小
+     * @return 分页查询
+     */
+    @GetMapping("/page")
+    public R<Page<Orders>> getUserOrdersPage(@RequestParam Integer page, @RequestParam Integer pageSize) {
+        Page<Orders> ordersPage = new Page<>(page,  pageSize);
+        Long userId = BaseContext.getCurrentId();
+        LambdaQueryWrapper<Orders> ordersLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        ordersLambdaQueryWrapper.eq(Orders::getUserId, userId);
+        ordersLambdaQueryWrapper.orderByDesc(Orders::getOrderTime).orderByDesc(Orders::getCheckoutTime);
+        // 按条件进行分页查询
+        // SQL: select * from orders where user_id = ? limit ?, ?
+        ordersPage = ordersService.page(ordersPage, ordersLambdaQueryWrapper);
+
+        return R.success(ordersPage);
+    }
 }
